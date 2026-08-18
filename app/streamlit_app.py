@@ -13,9 +13,6 @@ API_URL = os.getenv(
 )
 
 
-
-
-
 st.set_page_config(
     page_title="Fake News Detection",
     page_icon="📰",
@@ -49,10 +46,21 @@ analyze = st.button(
 
 if analyze:
 
-    if not article_text.strip():
+    text = article_text.strip()
 
+    if not text:
         st.warning(
             "Please enter a news article before analyzing."
+        )
+
+    elif len(text) < 10:
+        st.warning(
+            "Please enter at least 10 characters."
+        )
+
+    elif len(text) > 10000:
+        st.warning(
+            "Article is too long. Please keep it below 10,000 characters."
         )
 
     else:
@@ -63,9 +71,7 @@ if analyze:
 
                 response = httpx.post(
                     f"{API_URL}/predict",
-                    json={
-                        "text": article_text
-                    },
+                    json={"text": text},
                     timeout=60.0,
                 )
 
@@ -100,35 +106,61 @@ if analyze:
                 col1, col2 = st.columns(2)
 
                 with col1:
-
                     st.metric(
                         "Fake",
-                        f"{fake_probability:.2%}"
+                        f"{fake_probability:.2%}",
                     )
 
                 with col2:
-
                     st.metric(
                         "Real",
-                        f"{real_probability:.2%}"
+                        f"{real_probability:.2%}",
                     )
 
                 st.progress(
                     fake_probability,
-                    text=f"Fake probability: {fake_probability:.2%}"
+                    text=f"Fake probability: {fake_probability:.2%}",
                 )
 
                 st.progress(
                     real_probability,
-                    text=f"Real probability: {real_probability:.2%}"
+                    text=f"Real probability: {real_probability:.2%}",
                 )
 
-            except httpx.HTTPError as error:
+            except httpx.TimeoutException:
+
+                st.error(
+                    "The prediction API took too long to respond."
+                )
+
+            except httpx.ConnectError:
 
                 st.error(
                     "Unable to connect to the prediction API."
                 )
 
+            except httpx.HTTPStatusError as error:
+
+                st.error(
+                    "The prediction API returned an error."
+                )
+
+                st.caption(
+                    f"API status: {error.response.status_code}"
+                )
+
+            except httpx.HTTPError as error:
+
+                st.error(
+                    "An HTTP error occurred while contacting the API."
+                )
+
                 st.caption(
                     f"API error: {error}"
+                )
+
+            except (KeyError, TypeError, ValueError):
+
+                st.error(
+                    "The prediction API returned an unexpected response."
                 )

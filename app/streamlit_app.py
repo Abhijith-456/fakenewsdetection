@@ -1,8 +1,19 @@
+import os
+
 import httpx
 import streamlit as st
+from dotenv import load_dotenv
 
 
-API_URL = "http://127.0.0.1:8000"
+load_dotenv()
+
+API_URL = os.getenv(
+    "API_URL",
+    "http://127.0.0.1:8000",
+)
+
+
+
 
 
 st.set_page_config(

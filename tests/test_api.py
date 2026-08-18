@@ -1,3 +1,8 @@
+import os
+
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+
+
 from fastapi.testclient import TestClient
 
 from api.main import app
@@ -61,6 +66,25 @@ def test_predict_rejects_short_text():
         json={
             "text": "hello"
         },
+    )
+
+    assert response.status_code == 422
+
+def test_predict_rejects_long_text():
+    response = client.post(
+        "/predict",
+        json={
+            "text": "a" * 10001
+        },
+    )
+
+    assert response.status_code == 422
+
+
+def test_predict_rejects_missing_text():
+    response = client.post(
+        "/predict",
+        json={}
     )
 
     assert response.status_code == 422

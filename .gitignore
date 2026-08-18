@@ -16,8 +16,11 @@ data/*
 !data/.gitkeep
 
 # Model files
+# Model files
 models/*
 !models/.gitkeep
+!models/hybrid_model/
+!models/hybrid_model/**
 
 # Artifacts
 artifacts/*

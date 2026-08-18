@@ -1,7 +1,12 @@
-from fastapi import FastAPI
+import logging
+
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
 from src.predictor import FakeNewsPredictor
+
+
+logger = logging.getLogger(__name__)
 
 
 app = FastAPI(
@@ -62,6 +67,15 @@ def health():
     response_model=PredictionResponse,
 )
 def predict(request: PredictionRequest):
-    result = predictor.predict(request.text)
+    try:
+        result = predictor.predict(request.text)
 
-    return result
+        return result
+
+    except Exception:
+        logger.exception("Prediction failed")
+
+        raise HTTPException(
+            status_code=500,
+            detail="Prediction failed. Please try again.",
+        )

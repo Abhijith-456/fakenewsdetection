@@ -88,3 +88,27 @@ def test_predict_rejects_missing_text():
     )
 
     assert response.status_code == 422
+def test_predict_handles_inference_error(monkeypatch):
+    def failing_predict(text):
+        raise RuntimeError("internal model failure")
+
+    monkeypatch.setattr(
+        "api.main.predictor.predict",
+        failing_predict,
+    )
+
+    response = client.post(
+        "/predict",
+        json={
+            "text": (
+                "This is a valid article text that should "
+                "normally be processed by the prediction model."
+            )
+        },
+    )
+
+    assert response.status_code == 500
+
+    data = response.json()
+
+    assert data["detail"] == "Prediction failed. Please try again."
